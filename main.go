@@ -3,8 +3,12 @@ package main
 import (
 	"fmt"
 	"github.com/jessevdk/go-flags"
+	fs "io/fs"
+	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 var Opts struct {
@@ -24,27 +28,39 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	Verbosity := len(Opts.Verbose)
-	fmt.Printf("Verbosity: %d\n", len(Opts.Verbose))
-	fmt.Printf("Operation: %s\n", Opts.Operation)
-	fmt.Printf("RootFolder: %s\n", Opts.Args.RootFolder)
+	Verbosity = len(Opts.Verbose)
+	logInfo("Verbosity: %d\n", len(Opts.Verbose))
+	logInfo("Operation: %s\n", Opts.Operation)
+	logInfo("RootFolder: %s\n", Opts.Args.RootFolder)
 
 	// cmd := exec.Command("tr", "a-z", "A-Z")
 	//	out, err := cmd := exec.Command("find", "Opts.Args.RootFolder", "-path '*/.git/config'", "-execdir git remote get-url origin \\;").Output()
 
-	e, err := exists(Opts.Args.RootFolder)
+	e, err := fileExists(Opts.Args.RootFolder)
 	if !e || err != nil {
-		fmt.Sprintf("root directory %s is not valid/r/n", Opts.Args.RootFolder)
+		logWarn("root directory %s is not valid: %s", Opts.Args.RootFolder, err)
+	} else {
+		logInfo("root directory %s is valid", Opts.Args.RootFolder)
 	}
-	files, err := FilePathWalk(Opts.Args.RootFolder)
+	dirs, err := dirPathWalk(Opts.Args.RootFolder, ".git")
 
-	if Verbosity > 0 {
-		for _, file := range files {
-			fmt.Println(file)
+	printRemotes(dirs)
+}
+
+func printRemotes(dirs []string) {
+	//git remote get-url origin
+
+	for _, dir := range dirs {
+
+		out, err := exec.Command("git", "-C", dir, "remote", "get-url", "origin").Output()
+		if err != nil {
+			log.Fatal(err)
 		}
+		fmt.Printf("folder: %s, remote: %s", dir, out)
 	}
 }
-func exists(path string) (bool, error) {
+
+func fileExists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {
 		return true, nil
@@ -54,11 +70,12 @@ func exists(path string) (bool, error) {
 	}
 	return false, err
 }
-func FilePathWalk(root string) ([]string, error) {
+
+func dirPathWalk(root string, filter string) ([]string, error) {
 	var folders []string
 
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() {
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if d.IsDir() && strings.EqualFold(d.Name(), filter) {
 			folders = append(folders, path)
 		}
 		return nil
