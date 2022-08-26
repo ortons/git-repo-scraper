@@ -70,9 +70,9 @@ func printRemotes(dirs []string) {
 			}
 		} else {
 			parent := filepath.Dir(root)
-			fmt.Printf("mkdir -p '%s' && cd '%s' && git clone %s", parent, parent, strings.ReplaceAll(outb.String(), "\n", ""))
+			fmt.Printf("mkdir -p '%s' && cd '%s' && git clone %s", parent, parent, outb.String()) // strings.ReplaceAll(outb.String(), "\n", ""))
 			if i < n-1 {
-				fmt.Printf(" \\\n")
+				fmt.Printf(" \\ ") //\r\n")
 			} else {
 				fmt.Println()
 			}
