@@ -18,3 +18,11 @@ Input flags:
 * improve the logging
 * read the file
 * options to just have urls, not the entire shell creation one-liner. 
+
+
+
+---
+### Note:
+You can do some of this in a find one-liner, and some sed magic would help too. Probably should compare and profile the two! 
+
+```find . -path '*/.git/config' -execdir git remote get-url origin \;```

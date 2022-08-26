@@ -35,7 +35,7 @@ func main() {
 		logInfo("Operation: %s\n", Opts.Operation)
 		logInfo("RootFolder: %s\n", Opts.Args.RootFolder)
 	}
-	//	out, err := cmd := exec.Command("find", "Opts.Args.RootFolder", "-path '*/.git/config'", "-execdir git remote get-url origin \\;").Output()
+
 	e, err := fileExists(Opts.Args.RootFolder)
 	if !e || err != nil {
 		logWarn("root directory %s is not valid: %s", Opts.Args.RootFolder, err)
