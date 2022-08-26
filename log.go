@@ -6,7 +6,7 @@ var Verbosity int
 
 func logWarn(format string, a ...any) {
 	fmt.Printf(format, a)
-	fmt.Println()
+
 }
 
 func logInfo(format string, a ...any) {
@@ -14,7 +14,7 @@ func logInfo(format string, a ...any) {
 		return
 	}
 	fmt.Printf(format, a)
-	fmt.Println()
+
 }
 
 func logDebug(format string, a ...any) {
@@ -22,5 +22,5 @@ func logDebug(format string, a ...any) {
 		return
 	}
 	fmt.Printf(format, a)
-	fmt.Println()
+
 }

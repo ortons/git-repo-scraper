@@ -30,18 +30,20 @@ func main() {
 		panic(err)
 	}
 	Verbosity = len(Opts.Verbose)
-	logInfo("Verbosity: %d\n", len(Opts.Verbose))
-	logInfo("Operation: %s\n", Opts.Operation)
-	logInfo("RootFolder: %s\n", Opts.Args.RootFolder)
-
-	// cmd := exec.Command("tr", "a-z", "A-Z")
+	if Verbosity > 1 {
+		logInfo("Verbosity: %d\n", len(Opts.Verbose))
+		logInfo("Operation: %s\n", Opts.Operation)
+		logInfo("RootFolder: %s\n", Opts.Args.RootFolder)
+	}
 	//	out, err := cmd := exec.Command("find", "Opts.Args.RootFolder", "-path '*/.git/config'", "-execdir git remote get-url origin \\;").Output()
-
 	e, err := fileExists(Opts.Args.RootFolder)
 	if !e || err != nil {
 		logWarn("root directory %s is not valid: %s", Opts.Args.RootFolder, err)
+		os.Exit(2)
 	} else {
-		logInfo("root directory %s is valid", Opts.Args.RootFolder)
+		if Verbosity > 1 {
+			logInfo("root directory %s is valid", Opts.Args.RootFolder)
+		}
 	}
 	dirs, err := dirPathWalk(Opts.Args.RootFolder, ".git")
 
@@ -51,8 +53,9 @@ func main() {
 
 func printRemotes(dirs []string) {
 	//git remote get-url origin
-
-	for _, dir := range dirs {
+	n := len(dirs)
+	for i := 0; i < n; i++ {
+		dir := dirs[i]
 
 		root := filepath.Dir(dir)
 
@@ -67,7 +70,12 @@ func printRemotes(dirs []string) {
 			}
 		} else {
 			parent := filepath.Dir(root)
-			fmt.Printf("mkdir -p '%s' && cd '%s' && git clone %s \\", parent, parent, outb.String())
+			fmt.Printf("mkdir -p '%s' && cd '%s' && git clone %s", parent, parent, strings.ReplaceAll(outb.String(), "\n", ""))
+			if i < n-1 {
+				fmt.Printf(" \\\n")
+			} else {
+				fmt.Println()
+			}
 		}
 	}
 }
