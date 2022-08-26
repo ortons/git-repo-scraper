@@ -1,10 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/jessevdk/go-flags"
 	fs "io/fs"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -54,14 +54,21 @@ func printRemotes(dirs []string) {
 
 	for _, dir := range dirs {
 
-		out, err := exec.Command("git", "-C", dir, "remote", "get-url", "origin").Output()
-		if err != nil {
-			log.Fatal(err)
-		}
-		/*fmt.Printf("folder: %s, remote: %s", dir, out)
-		 */
-		fmt.Printf("git clone %s", out)
+		root := filepath.Dir(dir)
 
+		cmd := exec.Command("git", "-C", dir, "remote", "get-url", "origin")
+		var outb, errb bytes.Buffer
+		cmd.Stdout = &outb
+		cmd.Stderr = &errb
+		err := cmd.Run()
+		if err != nil {
+			if Verbosity > 1 {
+				fmt.Printf("%s: %s", dir, errb.String())
+			}
+		} else {
+			parent := filepath.Dir(root)
+			fmt.Printf("mkdir -p '%s' && cd '%s' && git clone %s \\", parent, parent, outb.String())
+		}
 	}
 }
 
