@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -44,6 +45,7 @@ func main() {
 	}
 	dirs, err := dirPathWalk(Opts.Args.RootFolder, ".git")
 
+	sort.Strings(dirs)
 	printRemotes(dirs)
 }
 
@@ -56,7 +58,10 @@ func printRemotes(dirs []string) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("folder: %s, remote: %s", dir, out)
+		/*fmt.Printf("folder: %s, remote: %s", dir, out)
+		 */
+		fmt.Printf("git clone %s", out)
+
 	}
 }
 
