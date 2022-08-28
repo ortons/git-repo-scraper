@@ -13,16 +13,17 @@ import (
 )
 
 var Opts struct {
-	Verbose   []bool `short:"v" long:"verbose" description:"Show verbose debug information"`
-	Operation string `short:"o" long:"operation" description:"operation [read | create]" choice:"read" choice:"create"`
-	Args      struct {
+	Verbose []bool `short:"v" long:"verbose" description:"Show verbose debug information"`
+	File    string `short:"f" long:"file" description:"csv file for import / export operations. ignored for shell operations"`
+	Action  string `short:"a" long:"action" description:"action [export | import | shell]" choice:"export" choice:"import" choice:"shell"`
+	Args    struct {
 		RootFolder string
 	} `positional-args:"yes" required:"yes"`
 }
 
 func main() {
 
-	Opts.Operation = "read"
+	Opts.Action = "read"
 
 	_, err := flags.Parse(&Opts)
 
@@ -30,11 +31,11 @@ func main() {
 		panic(err)
 	}
 	Verbosity = len(Opts.Verbose)
-	if Verbosity > 1 {
-		logInfo("Verbosity: %d\n", len(Opts.Verbose))
-		logInfo("Operation: %s\n", Opts.Operation)
-		logInfo("RootFolder: %s\n", Opts.Args.RootFolder)
-	}
+
+	logInfo("File: %s\n", Opts.File)
+	logInfo("Verbosity: %d\n", len(Opts.Verbose))
+	logInfo("Action: %s\n", Opts.Action)
+	logInfo("RootFolder: %s\n", Opts.Args.RootFolder)
 
 	e, err := fileExists(Opts.Args.RootFolder)
 	if !e || err != nil {
@@ -48,10 +49,19 @@ func main() {
 	dirs, err := dirPathWalk(Opts.Args.RootFolder, ".git")
 
 	sort.Strings(dirs)
-	printRemotes(dirs)
+	switch Opts.Action {
+	case "export":
+		break
+	case "import":
+		break
+	case "shell":
+		break
+
+	}
+	buildShell(dirs)
 }
 
-func printRemotes(dirs []string) {
+func buildShell(dirs []string) {
 	//git remote get-url origin
 	n := len(dirs)
 	for i := 0; i < n; i++ {
