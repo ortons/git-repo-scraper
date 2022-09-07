@@ -6,21 +6,22 @@ var Verbosity int
 
 func logWarn(format string, a ...interface{}) {
 	fmt.Printf(format, a...)
-
+	fmt.Println()
 }
 
 func logInfo(format string, a ...interface{}) {
-	if Verbosity < 0 {
-		return
+	if Verbosity > 1 {
+		fmt.Printf(format, a...)
+		fmt.Println()
 	}
-	fmt.Printf(format, a...)
-
 }
 
 func logDebug(format string, a ...interface{}) {
-	if Verbosity < 1 {
-		return
+	if Verbosity > 2 {
+		{
+			return
+		}
+		fmt.Printf(format, a...)
+		fmt.Println()
 	}
-	fmt.Printf(format, a...)
-
 }
