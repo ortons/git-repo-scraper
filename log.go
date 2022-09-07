@@ -9,10 +9,15 @@ func logWarn(format string, a ...interface{}) {
 	fmt.Println()
 }
 
-func logInfo(format string, a ...interface{}) {
+func logFmt(format string, a ...interface{}) {
 	if Verbosity > 1 {
 		fmt.Printf(format, a...)
 		fmt.Println()
+	}
+}
+func logMsg(msg string) {
+	if Verbosity > 1 {
+		fmt.Println(msg)
 	}
 }
 

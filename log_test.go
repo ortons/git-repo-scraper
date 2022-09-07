@@ -39,7 +39,7 @@ func Test_logInfo(t *testing.T) {
 		{"Test2", args{"info %d %d %s", []any{"123", 123, "yury"}}}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			logInfo(tt.args.format, tt.args.a...)
+			logFmt(tt.args.format, tt.args.a...)
 		})
 	}
 }

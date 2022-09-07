@@ -25,13 +25,6 @@ type options struct {
 	} `positional-args:"yes" required:"yes"`
 }
 
-type gitDirEntry struct {
-	absDir    string `csv:"absDir"`
-	relDir    string `csv:"relDir"`
-	gitRemote string `csv:"gitRemote"`
-	gitBranch string `csv:"gitBranch"`
-}
-
 var opts options
 
 func main() {
@@ -56,8 +49,11 @@ func main() {
 		exportCsv(file, gitDirEntries)
 		break
 	case "import":
-		importCsv(opts.File)
-
+		if r, err := readCsv(opts.File); err != nil {
+			log.Fatal(err)
+		} else {
+			createRepos(r)
+		}
 		break
 	case "shell":
 		gitDirEntries := walkRoot(opts.Args.RootFolder)
@@ -67,11 +63,28 @@ func main() {
 
 }
 
+func createRepos(repos []gitDirEntry) {
+	for _, repo := range repos {
+		logMsg(repo.toString())
+
+		if err := os.Mkdir(repo.absDir, os.ModePerm); err != nil {
+			//log.Fatal(err)
+		}
+
+		var out, err = execCmd("git", "-C", repo.absDir, "clone", "--branch", repo.gitBranch, repo.gitRemote)
+		if err != nil {
+			logWarn("failed to clone git repo %s:%s to %s. %s", repo.gitRemote, repo.gitBranch, repo.absDir, err)
+		}
+		logMsg(out)
+	}
+
+}
+
 func (o options) log() {
-	logInfo("file: %s\n", opts.File)
-	logInfo("verbosity: %d\n", len(opts.Verbose))
-	logInfo("action: %s\n", opts.Action)
-	logInfo("rootFolder: %s\n", opts.Args.RootFolder)
+	logFmt("file: %s\n", opts.File)
+	logFmt("verbosity: %d\n", len(opts.Verbose))
+	logFmt("action: %s\n", opts.Action)
+	logFmt("rootFolder: %s\n", opts.Args.RootFolder)
 }
 
 func createFallbackFilename(root string) string {
@@ -82,32 +95,25 @@ func createFallbackFilename(root string) string {
 
 }
 
-func exportCsv(filename string, dirs []gitDirEntry) {
+func exportCsv(filename string, repos []gitDirEntry) {
 
 	f, err := os.Create(filename)
-
 	defer f.Close()
 
 	if err != nil {
 		log.Fatalln("failed to open file", err)
 	}
-
 	w := csv.NewWriter(f)
 	defer w.Flush()
 
-	for _, record := range dirs {
+	for _, record := range repos {
 		if err := w.Write(record.mkCsvEntry()); err != nil {
 			logWarn("error writing record %s to file", err, record.gitBranch)
 		}
 	}
-
 }
 
-func (g *gitDirEntry) mkCsvEntry() []string {
-	return []string{g.absDir, g.relDir, g.gitRemote, g.gitBranch}
-}
-
-func importCsv(file string) ([]gitDirEntry, error) {
+func readCsv(file string) ([]gitDirEntry, error) {
 	if len(file) == 0 {
 		return nil, errors.New("file is required")
 	}
@@ -117,19 +123,21 @@ func importCsv(file string) ([]gitDirEntry, error) {
 		return nil, errors.New("file is not accessible")
 	}
 
-	if f, err := os.Open(file); err != nil {
-		return nil, err
-	} else {
-		r := csv.NewReader(f)
-		if records, err := r.ReadAll(); err != nil {
-			log.Fatal(err)
-		} else {
+	f, err := os.Open(file)
+	defer f.Close()
 
-			for _, record := range records {
-				results = append(results, gitDirEntry{record[0], record[1], record[2], record[3]})
-			}
+	if err != nil {
+		return nil, err
+	}
+	r := csv.NewReader(f)
+	if records, err := r.ReadAll(); err != nil {
+		log.Fatal(err)
+	} else {
+		for _, record := range records {
+			results = append(results, gitDirEntry{record[0], record[1], record[2], record[3]})
 		}
 	}
+
 	return results, nil
 }
 
@@ -146,7 +154,7 @@ func walkRoot(root string) []gitDirEntry {
 		log.Fatalf("root directory %s is not valid: %s\n", root, err)
 	}
 
-	logInfo("root directory %s is valid", root)
+	logFmt("root directory %s is valid", root)
 
 	dirs, err := dirPathWalk(root, ".git")
 	// sort.Strings(dirs)
@@ -156,11 +164,12 @@ func walkRoot(root string) []gitDirEntry {
 func dirPathWalk(root string, filter string) ([]gitDirEntry, error) {
 	var gitDirEntries []gitDirEntry
 
-	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+	err := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
 
 		if d.IsDir() && strings.EqualFold(d.Name(), filter) {
-			g := gitDirEntry{absDir: path,
-				relDir: path,
+			parent := path.Dir(p)
+			g := gitDirEntry{absDir: parent,
+				relDir: parent,
 			}
 			parseGitDetails(&g)
 
@@ -193,15 +202,15 @@ func parseGitDetails(e *gitDirEntry) {
 
 func execCmd(name string, arg ...string) (string, error) {
 	cmd := exec.Command(name, arg...)
-	var outb, errb bytes.Buffer
-	cmd.Stdout = &outb
-	cmd.Stderr = &errb
+	var out, errs bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &errs
 	err := cmd.Run()
-	if err != nil || errb.Len() > 0 {
-		return "", errors.New(errb.String())
+	if err != nil || errs.Len() > 0 {
+		return "", errors.New(errs.String())
 	}
 
-	return strings.TrimSuffix(outb.String(), "\n"), nil
+	return strings.TrimSuffix(out.String(), "\n"), nil
 }
 
 func fileExists(path string) (bool, error) {
