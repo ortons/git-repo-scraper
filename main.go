@@ -68,16 +68,15 @@ func createRepos(repos []gitDirEntry) {
 		logMsg(repo.toString())
 
 		if err := os.Mkdir(repo.absDir, os.ModePerm); err != nil {
-			//log.Fatal(err)
+			logWarn("unable to create the target directory: %s", err.Error())
 		}
 
-		var out, err = execCmd("git", "-C", repo.absDir, "clone", "--branch", repo.gitBranch, repo.gitRemote)
+		var out, err = execCmd("git", "clone", "--branch", repo.gitBranch, repo.gitRemote, repo.absDir)
 		if err != nil {
 			logWarn("failed to clone git repo %s:%s to %s. %s", repo.gitRemote, repo.gitBranch, repo.absDir, err)
 		}
 		logMsg(out)
 	}
-
 }
 
 func (o options) log() {

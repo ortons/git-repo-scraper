@@ -54,8 +54,7 @@ func Test_logWarn(t *testing.T) {
 		name string
 		args args
 	}{{"Test", args{"warn", []any{"123", 123, "yury"}}},
-		{"Test2", args{"warn %s %s %s", []any{"123", 123, "yury"}}},
-		{"Test2", args{"warn %d %d %s", []any{"123", 123, "yury"}}}}
+		{"Test2", args{"warn %s %s %s", []any{"123", 123, "yury"}}}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			logWarn(tt.args.format, tt.args.a...)
