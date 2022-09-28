@@ -21,7 +21,7 @@ func logMsg(msg string) {
 	}
 }
 
-func logDebug(format string, a ...interface{}) {
+func logDebug(format string, a ...any) {
 	if Verbosity > 2 {
 		{
 			return
