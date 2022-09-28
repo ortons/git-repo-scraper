@@ -74,6 +74,19 @@ func createRepos(repos []gitDirEntry) {
 		var out, err = execCmd("git", "clone", "--branch", repo.gitBranch, repo.gitRemote, repo.absDir)
 		if err != nil {
 			logWarn("failed to clone git repo %s:%s to %s. %s", repo.gitRemote, repo.gitBranch, repo.absDir, err)
+
+			//try pulling latest
+			os.Chdir(repo.absDir)
+
+			out, err = execCmd("git", "pull", "origin", repo.gitBranch)
+			if err != nil {
+				s := err.Error()
+				if strings.ContainsAny(s, "W A R N I N G") {
+					logMsg("pulling latest into branch " + repo.gitBranch + " from " + repo.gitRemote)
+				} else {
+					logWarn("failed to pull git repo %s:%s to %s. %s", repo.gitRemote, repo.gitBranch, repo.absDir, err)
+				}
+			}
 		}
 		logMsg(out)
 	}
