@@ -4,12 +4,12 @@ import "fmt"
 
 var Verbosity int
 
-func logWarn(format string, a ...interface{}) {
+func logWarn(format string, a ...any) {
 	fmt.Printf(format, a...)
 	fmt.Println()
 }
 
-func logFmt(format string, a ...interface{}) {
+func logFmt(format string, a ...any) {
 	if Verbosity > 1 {
 		fmt.Printf(format, a...)
 		fmt.Println()

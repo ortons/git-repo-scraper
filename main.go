@@ -120,7 +120,7 @@ func exportCsv(filename string, repos []gitDirEntry) {
 
 	for _, record := range repos {
 		if err := w.Write(record.mkCsvEntry()); err != nil {
-			logWarn("error writing record %s to file", err, record.gitBranch)
+			logWarn("error writing record %s to file %s", err, record.gitBranch)
 		}
 	}
 }
